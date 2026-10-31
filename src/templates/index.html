@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network Threat Detector</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface-1: #fcfcfb;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --wash: rgba(11, 11, 11, 0.04);
+    --series-1: #2a78d6;
+    --bar-rest: #c3c2b7;
+    --good: #0ca30c;
+    --good-text: #006300;
+    --critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface-1: #1a1a19;
+      --text-primary: #f0efec;
+      --text-secondary: #c3c2b7;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --wash: rgba(255, 255, 255, 0.05);
+      --series-1: #3987e5;
+      --bar-rest: #52514e;
+      --good-text: #0ca30c;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 28px; margin: 0 0 6px; }
+  h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin: 0 0 12px; }
+  p { margin: 0; }
+  .lead { color: var(--text-secondary); max-width: 640px; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-top: 20px;
+  }
+
+  .pickers { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    padding: 7px 14px;
+  }
+  button:hover { background: var(--wash); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+  button.primary { background: var(--series-1); border-color: transparent; color: #ffffff; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); }
+  .pickers button small { color: var(--muted); margin-left: 4px; }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px 20px; margin: 0; }
+  .facts div { min-width: 0; }
+  .facts dt { font-size: 12px; color: var(--muted); }
+  .facts dd { margin: 2px 0 0; font-weight: 600; }
+  .facts dd span { display: block; font-weight: 400; font-size: 12px; color: var(--text-secondary); }
+
+  details { margin-top: 18px; border-top: 1px solid var(--grid); padding-top: 14px; }
+  summary { cursor: pointer; color: var(--text-secondary); }
+  .all-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 16px; margin-top: 14px; }
+  .all-fields label { display: block; font-size: 12px; color: var(--text-secondary); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .all-fields input, .all-fields select {
+    width: 100%; margin-top: 3px; font: inherit; padding: 5px 8px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--page); color: var(--text-primary);
+  }
+  .actions { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+  .edited { color: var(--muted); font-size: 13px; }
+
+  .verdict { display: flex; gap: 14px; align-items: flex-start; }
+  .icon {
+    flex: none; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; color: #ffffff; font-weight: 700; font-size: 18px;
+  }
+  .icon.good { background: var(--good); }
+  .icon.critical { background: var(--critical); }
+  .verdict h3 { margin: 0; font-size: 22px; }
+  .verdict p { color: var(--text-secondary); }
+
+  .votes { list-style: none; margin: 20px 0 0; padding: 0; }
+  .votes li {
+    display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 12px;
+    padding: 5px 6px; border-radius: 6px;
+  }
+  .votes li:hover, .votes li:focus { background: var(--wash); outline: none; }
+  .votes .name { color: var(--text-secondary); font-size: 14px; }
+  .votes .track { display: flex; align-items: center; border-left: 1px solid var(--baseline); min-height: 22px; }
+  .votes .bar { height: 14px; border-radius: 0 4px 4px 0; background: var(--bar-rest); }
+  .votes .bar.top { background: var(--series-1); }
+  .votes .value { margin-left: 8px; font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .votes li.top .name, .votes li.top .value { color: var(--text-primary); font-weight: 600; }
+
+  .truth { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--grid); }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  .badge .dot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; color: #ffffff; font-size: 11px; }
+  .badge.good { color: var(--good-text); }
+  .badge.good .dot { background: var(--good); }
+  .badge.critical { color: var(--critical); }
+  .badge.critical .dot { background: var(--critical); }
+  .score { margin-left: auto; color: var(--text-secondary); font-size: 13px; }
+  .error { color: var(--critical); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Network Threat Detector</h1>
+  <p class="lead">An AI model built from many small decision trees looks at one network connection and decides whether it is normal traffic or one of four kinds of attack.</p>
+
+  <section class="card">
+    <h2>1. Pick a connection</h2>
+    <div class="pickers" id="pickers">
+      <button data-type="any">Any random</button>
+      <button data-type="normal">Normal</button>
+      <button data-type="dos">DoS <small>flooding</small></button>
+      <button data-type="probe">Probe <small>scanning</small></button>
+      <button data-type="r2l">R2L <small>break-in</small></button>
+      <button data-type="u2r">U2R <small>admin grab</small></button>
+    </div>
+    <p class="note">These are real connections from the NSL-KDD test set. The model never saw them while it was learning.</p>
+  </section>
+
+  <section class="card" id="connection-card" hidden>
+    <h2>2. The connection</h2>
+    <dl class="facts" id="facts"></dl>
+    <details>
+      <summary>Edit all 41 values</summary>
+      <div class="all-fields" id="all-fields"></div>
+    </details>
+    <div class="actions">
+      <button class="primary" id="check">Check this connection</button>
+      <span class="edited" id="edited-note" hidden>Edited by you, so the real answer is unknown</span>
+    </div>
+  </section>
+
+  <section class="card" id="result-card" hidden aria-live="polite">
+    <h2>3. What the model says</h2>
+    <div id="result"></div>
+  </section>
+</main>
+
+<script>
+  const TEXT_VALUES = {{ text_values | tojson }};
+  const FEATURES = {{ features | tojson }};
+
+  const TYPES = {
+    normal: { name: "Normal traffic", about: "Ordinary, harmless connection." },
+    dos:    { name: "DoS (flooding)", about: "Trying to overload a server so it stops working." },
+    probe:  { name: "Probe (scanning)", about: "Checking the network for open doors and weak spots." },
+    r2l:    { name: "R2L (break-in from outside)", about: "An outsider trying to get access, for example by guessing passwords." },
+    u2r:    { name: "U2R (grabbing admin powers)", about: "Someone already inside trying to become admin." },
+  };
+  const ORDER = ["normal", "dos", "probe", "r2l", "u2r"];
+
+  const FLAGS = {
+    SF: "Opened and closed normally",
+    S0: "Knocked, but got no answer",
+    REJ: "Rejected by the other side",
+    RSTO: "Reset by the sender",
+    RSTR: "Reset by the receiver",
+    RSTOS0: "Knocked, then reset",
+    SH: "Knocked, then hung up",
+    S1: "Opened, not closed cleanly",
+    S2: "Opened, not closed cleanly",
+    S3: "Opened, not closed cleanly",
+    OTH: "Unclear",
+  };
+
+  let current = null;
+  const score = { right: 0, total: 0 };
+  const $ = (id) => document.getElementById(id);
+  const num = (v) => Number(v).toLocaleString();
+  const pct = (v) => `${Math.round(Number(v) * 100)}%`;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+  // One input per feature; text dropdowns for the three categorical ones
+  function buildFields() {
+    $("all-fields").innerHTML = FEATURES.map((f) => {
+      const control = TEXT_VALUES[f]
+        ? `<select id="f-${f}">${TEXT_VALUES[f].map((v) => `<option>${esc(v)}</option>`).join("")}</select>`
+        : `<input id="f-${f}" type="number" step="any">`;
+      return `<label for="f-${f}">${f}${control}</label>`;
+    }).join("");
+    $("all-fields").addEventListener("input", () => {
+      current.connection = readFields();
+      current.edited = true;
+      $("edited-note").hidden = false;
+      renderFacts();
+    });
+  }
+
+  function readFields() {
+    return Object.fromEntries(FEATURES.map((f) => {
+      const value = $(`f-${f}`).value;
+      return [f, TEXT_VALUES[f] ? value : Number(value)];
+    }));
+  }
+
+  function renderFacts() {
+    const c = current.connection;
+    const facts = [
+      ["Protocol", c.protocol_type],
+      ["Service", c.service],
+      ["Status", c.flag, FLAGS[c.flag]],
+      ["Duration", `${num(c.duration)} s`],
+      ["Bytes sent", num(c.src_bytes)],
+      ["Bytes received", num(c.dst_bytes)],
+      ["Connections to same host", num(c.count), "in the last 2 seconds"],
+      ["Of those, failed to open", pct(c.serror_rate)],
+      ["Failed logins", num(c.num_failed_logins)],
+      ["Logged in", Number(c.logged_in) ? "Yes" : "No"],
+    ];
+    $("facts").innerHTML = facts.map(([label, value, hint]) =>
+      `<div><dt>${label}</dt><dd>${esc(value)}${hint ? `<span>${esc(hint)}</span>` : ""}</dd></div>`
+    ).join("");
+  }
+
+  async function loadSample(type) {
+    const res = await fetch(`/sample?type=${type}`);
+    current = await res.json();
+    current.edited = false;
+    current.scored = false;
+    FEATURES.forEach((f) => { $(`f-${f}`).value = current.connection[f]; });
+    $("edited-note").hidden = true;
+    $("connection-card").hidden = false;
+    renderFacts();
+    await check();
+  }
+
+  async function check() {
+    $("result-card").hidden = false;
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(current.connection),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      renderResult(data.prediction[0], data.confidence[0], data.probabilities[0]);
+    } catch (err) {
+      $("result").innerHTML = `<p class="error">Could not check this connection: ${esc(err.message)}</p>`;
+    }
+  }
+
+  function renderResult(prediction, confidence, probabilities) {
+    const isNormal = prediction === "normal";
+    const type = TYPES[prediction];
+
+    const votes = ORDER.map((t) => {
+      const p = probabilities[t] || 0;
+      const top = t === prediction;
+      return `<li class="${top ? "top" : ""}" tabindex="0" title="${TYPES[t].name}: ${pct(p)} likely"
+                  aria-label="${TYPES[t].name}: ${pct(p)} likely">
+        <span class="name">${TYPES[t].name}</span>
+        <span class="track">
+          <span class="bar ${top ? "top" : ""}" style="width: calc(${p} * (100% - 52px))"></span>
+          <span class="value">${pct(p)}</span>
+        </span>
+      </li>`;
+    }).join("");
+
+    let truth;
+    if (current.edited) {
+      truth = `<span class="edited">You edited this connection, so there is no real answer to compare with.</span>`;
+    } else {
+      const right = prediction === current.attack_type;
+      if (!current.scored) {
+        score.total += 1;
+        if (right) score.right += 1;
+        current.scored = true;
+      }
+      truth = `<span>Real answer: <strong>${esc(TYPES[current.attack_type].name)}</strong>
+                 <span class="edited">(attack name: ${esc(current.attack)})</span></span>
+               <span class="badge ${right ? "good" : "critical"}">
+                 <span class="dot" aria-hidden="true">${right ? "✓" : "✕"}</span>${right ? "Model was right" : "Model was wrong"}
+               </span>`;
+    }
+
+    $("result").innerHTML = `
+      <div class="verdict">
+        <span class="icon ${isNormal ? "good" : "critical"}" aria-hidden="true">${isNormal ? "✓" : "!"}</span>
+        <div>
+          <h3>${isNormal ? "" : "Attack: "}${esc(type.name)}</h3>
+          <p>${esc(type.about)} The model is ${pct(confidence)} sure.</p>
+        </div>
+      </div>
+      <ul class="votes" aria-label="How likely each type is">${votes}</ul>
+      <div class="truth">
+        ${truth}
+        <span class="score">This session: ${score.right} of ${score.total} right</span>
+      </div>`;
+  }
+
+  buildFields();
+  $("pickers").addEventListener("click", (e) => {
+    const button = e.target.closest("button");
+    if (button) loadSample(button.dataset.type);
+  });
+  $("check").addEventListener("click", check);
+</script>
+</body>
+</html>
