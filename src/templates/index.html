@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Network Threat Detector</title>
+<title>Vigil · Network threat detection by Waris</title>
+<meta name="description" content="Vigil, by Waris: a machine learning model that tells normal network traffic from four kinds of attack.">
+<meta name="author" content="Waris">
+<link rel="icon" href="{{ url_for('static', filename='logo.svg') }}" type="image/svg+xml">
 <style>
   :root {
     color-scheme: light;
@@ -16,7 +19,9 @@
     --baseline: #c3c2b7;
     --border: rgba(11, 11, 11, 0.10);
     --wash: rgba(11, 11, 11, 0.04);
-    --series-1: #2a78d6;
+    /* Vigil brand violet */
+    --series-1: #6250d6;
+    --on-series-1: #ffffff;
     --bar-rest: #c3c2b7;
     --good: #0ca30c;
     --good-text: #006300;
@@ -33,7 +38,8 @@
       --baseline: #383835;
       --border: rgba(255, 255, 255, 0.10);
       --wash: rgba(255, 255, 255, 0.05);
-      --series-1: #3987e5;
+      --series-1: #9085e9;
+      --on-series-1: #0d0d0d;
       --bar-rest: #52514e;
       --good-text: #0ca30c;
     }
@@ -46,8 +52,18 @@
     color: var(--text-primary);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  main { max-width: 880px; margin: 0 auto; padding: 40px 20px 64px; }
+  main { max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; }
   h1 { font-size: 28px; margin: 0 0 6px; }
+
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; }
+  .brand img { width: 36px; height: 36px; }
+  .wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+  .byline { font-size: 13px; color: var(--text-secondary); line-height: 1.2; }
+
+  footer { max-width: 880px; margin: 0 auto; padding: 0 20px 40px; color: var(--muted); font-size: 13px; }
+  footer p { border-top: 1px solid var(--grid); padding-top: 18px; }
+  footer strong { color: var(--text-secondary); }
+  footer a { color: inherit; }
   h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin: 0 0 12px; }
   p { margin: 0; }
   .lead { color: var(--text-secondary); max-width: 640px; }
@@ -73,7 +89,7 @@
   }
   button:hover { background: var(--wash); }
   button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
-  button.primary { background: var(--series-1); border-color: transparent; color: #ffffff; font-weight: 600; }
+  button.primary { background: var(--series-1); border-color: transparent; color: var(--on-series-1); font-weight: 600; }
   button.primary:hover { filter: brightness(1.08); }
   .pickers button small { color: var(--muted); margin-left: 4px; }
 
@@ -132,7 +148,15 @@
 </head>
 <body>
 <main>
-  <h1>Network Threat Detector</h1>
+  <header class="brand">
+    <img src="{{ url_for('static', filename='logo.svg') }}" alt="">
+    <div>
+      <div class="wordmark">Vigil</div>
+      <div class="byline">by Waris</div>
+    </div>
+  </header>
+
+  <h1>Is this connection an attack?</h1>
   <p class="lead">An AI model built from many small decision trees looks at one network connection and decides whether it is normal traffic or one of four kinds of attack.</p>
 
   <section class="card">
@@ -166,6 +190,13 @@
     <div id="result"></div>
   </section>
 </main>
+
+<footer>
+  <p><strong>Vigil</strong> is made by <strong>Waris</strong>. Trained on the
+    <a href="https://www.unb.ca/cic/datasets/nsl.html">NSL-KDD</a> dataset (Canadian Institute for Cybersecurity).
+    Based on the original project by
+    <a href="https://github.com/mahaswetaroy1/cybersecurity-threat-ai">Mahasweta</a>.</p>
+</footer>
 
 <script>
   const TEXT_VALUES = {{ text_values | tojson }};

@@ -1,6 +1,11 @@
-# Network Threat Detector (NSL-KDD)
+<p align="center">
+  <img src="src/static/logo.svg" width="72" alt="Vigil logo">
+</p>
 
-A machine learning model that looks at one network connection and says whether it is
+<h1 align="center">Vigil</h1>
+<p align="center"><b>Network threat detection, by Waris</b></p>
+
+Vigil is a machine learning model that looks at one network connection and says whether it is
 **normal traffic** or one of four kinds of attack:
 
 | Type | Meaning |
@@ -15,6 +20,8 @@ Each connection is described by 41 numbers and labels from the
 [NSL-KDD](https://www.unb.ca/cic/datasets/nsl.html) dataset (bytes sent, service used,
 connections in the last 2 seconds, failed logins, ...). It includes a Flask API and a
 small web page for trying the model on real test connections.
+
+![The Vigil web page checking a DoS connection](docs/screenshot.png)
 
 ---
 
@@ -55,7 +62,9 @@ cybersecurity-threat-ai/
 │   ├── predict.py           # Predicts on KDDTest+ and prints accuracy
 │   ├── deploy.py            # Flask API and web page
 │   ├── templates/index.html # Web page
+│   ├── static/logo.svg      # Vigil logo (also the favicon)
 │   └── preprocess.py        # Old ARFF -> CSV step (no longer needed)
+├── docs/screenshot.png      # Web page screenshot for this README
 ├── notebooks/               # Exploration notebook
 └── requirements.txt
 ```
@@ -113,6 +122,9 @@ Send a list of objects to check several connections at once. Unknown text values
 error such as `{"error": "Unknown service 'zoom'"}`.
 
 ---
+
+## Author
+Vigil is built by **Waris**.
 
 ## Credits & License
 Based on the original project by Mahasweta
