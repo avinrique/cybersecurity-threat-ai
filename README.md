@@ -23,6 +23,21 @@ small web page for trying the model on real test connections.
 
 ![The Vigil web page checking a DoS connection](docs/screenshot.png)
 
+## Quick start
+
+You need [Python 3.13](https://www.python.org/downloads/) and Git.
+
+```bash
+git clone https://github.com/avinrique/cybersecurity-threat-ai.git
+cd cybersecurity-threat-ai
+./run.sh        # macOS / Linux
+run.bat         # Windows
+```
+
+The first run installs everything (about a minute). Then the web page opens at
+http://127.0.0.1:5077. Press `Ctrl+C` in the terminal to stop it. The trained model is
+already included, so there is no training step.
+
 ---
 
 ## Accuracy
@@ -66,6 +81,7 @@ cybersecurity-threat-ai/
 │   └── preprocess.py        # Old ARFF -> CSV step (no longer needed)
 ├── docs/screenshot.png      # Web page screenshot for this README
 ├── notebooks/               # Exploration notebook
+├── run.sh / run.bat         # One-command start (macOS, Linux / Windows)
 └── requirements.txt
 ```
 
